@@ -16,6 +16,8 @@ const InvoiceForm: React.FC<InvoiceFormProps> = ({ invoice, onSave, onCancel }) 
   const [formData, setFormData] = useState({
     patientId: invoice?.patientId || '',
     doctorId: invoice?.doctorId || '',
+    patientName: '',
+    doctorName: '',
     appointmentId: invoice?.appointmentId || '',
     issueDate: invoice?.issueDate || new Date().toISOString().split('T')[0],
     dueDate: invoice?.dueDate || '',
@@ -55,6 +57,18 @@ const InvoiceForm: React.FC<InvoiceFormProps> = ({ invoice, onSave, onCancel }) 
     };
     fetchData();
   }, []);
+
+  useEffect(() => {
+    if (invoice && patients.length > 0 && doctors.length > 0) {
+      const patient = patients.find(p => p.id === invoice.patientId);
+      const doctor = doctors.find(d => d.id === invoice.doctorId);
+      setFormData(prev => ({
+        ...prev,
+        patientName: patient ? `${patient.firstName} ${patient.lastName}` : '',
+        doctorName: doctor ? `${doctor.title} ${doctor.firstName} ${doctor.lastName}` : ''
+      }));
+    }
+  }, [invoice, patients, doctors]);
 
   useEffect(() => {
     // Calculate due date based on payment terms
@@ -157,6 +171,11 @@ const InvoiceForm: React.FC<InvoiceFormProps> = ({ invoice, onSave, onCancel }) 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
+    if (!formData.patientId || !formData.doctorId) {
+      alert('Please select a valid patient and doctor from the list.');
+      return;
+    }
+
     const invoiceData = {
       ...formData,
       id: invoice?.id || undefined,
@@ -213,36 +232,52 @@ const InvoiceForm: React.FC<InvoiceFormProps> = ({ invoice, onSave, onCancel }) 
                   <div className="grid grid-cols-2 gap-4">
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">Patient *</label>
-                      <select
+                      <input
+                        type="text"
                         required
-                        value={formData.patientId}
-                        onChange={(e) => setFormData({...formData, patientId: e.target.value})}
+                        list="patients-list"
+                        value={formData.patientName}
+                        onChange={(e) => {
+                          const name = e.target.value;
+                          const patient = patients.find(p => `${p.firstName} ${p.lastName}` === name);
+                          setFormData({
+                            ...formData,
+                            patientName: name,
+                            patientId: patient ? patient.id : ''
+                          });
+                        }}
                         className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                      >
-                        <option value="">Select a patient</option>
+                      />
+                      <datalist id="patients-list">
                         {patients.map((patient) => (
-                          <option key={patient.id} value={patient.id}>
-                            {patient.firstName} {patient.lastName}
-                          </option>
+                          <option key={patient.id} value={`${patient.firstName} ${patient.lastName}`} />
                         ))}
-                      </select>
+                      </datalist>
                     </div>
 
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">Doctor *</label>
-                      <select
+                      <input
+                        type="text"
                         required
-                        value={formData.doctorId}
-                        onChange={(e) => setFormData({...formData, doctorId: e.target.value})}
+                        list="doctors-list"
+                        value={formData.doctorName}
+                        onChange={(e) => {
+                          const name = e.target.value;
+                          const doctor = doctors.find(d => `${d.title} ${d.firstName} ${d.lastName}` === name);
+                          setFormData({
+                            ...formData,
+                            doctorName: name,
+                            doctorId: doctor ? doctor.id : ''
+                          });
+                        }}
                         className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                      >
-                        <option value="">Select a doctor</option>
+                      />
+                      <datalist id="doctors-list">
                         {doctors.map((doctor) => (
-                          <option key={doctor.id} value={doctor.id}>
-                            {doctor.title} {doctor.firstName} {doctor.lastName}
-                          </option>
+                          <option key={doctor.id} value={`${doctor.title} ${doctor.firstName} ${doctor.lastName}`} />
                         ))}
-                      </select>
+                      </datalist>
                     </div>
                   </div>
 
