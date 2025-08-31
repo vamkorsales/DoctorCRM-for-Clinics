@@ -39,19 +39,19 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose, activeSection = 'das
       {/* Mobile backdrop */}
       {isOpen && (
         <div 
-          className="fixed inset-0 z-40 bg-gray-600 bg-opacity-75 lg:hidden"
+          className="fixed inset-0 z-20 bg-gray-600 bg-opacity-75 md:hidden"
           onClick={onClose}
         />
       )}
 
       {/* Sidebar */}
       <div className={`
-        fixed inset-y-0 left-0 z-50
+        fixed inset-y-0 left-0 z-30
         ${collapsed ? 'w-16' : 'w-64'}
-        bg-white border-r border-gray-100 transform transition-all duration-300 ease-in-out lg:translate-x-0 lg:static lg:inset-0
+        bg-white border-r border-gray-100 transform transition-all duration-300 ease-in-out md:translate-x-0 md:static md:inset-0
         ${isOpen ? 'translate-x-0' : '-translate-x-full'}
       `}>
-        <div className="flex items-center justify-between h-16 px-2 lg:px-4 border-b border-gray-100">
+        <div className="flex items-center justify-between h-16 px-2 md:px-4 border-b border-gray-100">
           <div className="flex items-center space-x-3">
             <div className="w-8 h-8 bg-gray-900 rounded-lg flex items-center justify-center">
               <span className="text-white font-bold text-sm">▲</span>
@@ -62,7 +62,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose, activeSection = 'das
             {/* Collapse/Expand button (desktop only) */}
             <button
               onClick={() => setCollapsed((c) => !c)}
-              className="hidden lg:inline-flex p-2 rounded-md text-gray-400 hover:text-gray-600 hover:bg-gray-50 focus:outline-none"
+              className="hidden md:inline-flex p-2 rounded-md text-gray-400 hover:text-gray-600 hover:bg-gray-50 focus:outline-none"
               title={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
             >
               {collapsed ? <ChevronRight className="h-5 w-5" /> : <ChevronLeft className="h-5 w-5" />}
@@ -70,7 +70,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose, activeSection = 'das
             {/* Mobile close button */}
             <button
               onClick={onClose}
-              className="p-2 rounded-md text-gray-400 hover:text-gray-600 hover:bg-gray-50 lg:hidden"
+              className="p-2 rounded-md text-gray-400 hover:text-gray-600 hover:bg-gray-50 md:hidden"
             >
               <X className="h-5 w-5" />
             </button>

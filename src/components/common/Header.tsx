@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Search, User } from 'lucide-react';
+import { Search, User, Menu } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 
 interface HeaderProps {
@@ -31,8 +31,16 @@ const Header: React.FC<HeaderProps> = ({ onMenuClick }) => {
   return (
     <header className="bg-white border-b border-gray-100 h-16">
       <div className="flex items-center justify-between px-6 h-full">
-        <div className="flex items-center space-x-6">
-          <div className="flex items-center space-x-3">
+        <div className="flex items-center space-x-4">
+          <button
+            className="md:hidden text-gray-600 focus:outline-none"
+            onClick={onMenuClick}
+            aria-label="Open sidebar"
+          >
+            <Menu className="h-6 w-6" />
+          </button>
+
+          <div className="hidden md:flex items-center space-x-3">
             <div className="w-8 h-8 bg-gray-900 rounded-lg flex items-center justify-center">
               <span className="text-white font-bold text-sm">▲</span>
             </div>
@@ -48,7 +56,7 @@ const Header: React.FC<HeaderProps> = ({ onMenuClick }) => {
             <input
               type="text"
               placeholder="Search"
-              className="block w-80 pl-10 pr-3 py-2 border-0 bg-gray-50 rounded-lg text-sm placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:bg-white"
+              className="block w-full md:w-80 pl-10 pr-3 py-2 border-0 bg-gray-50 rounded-lg text-sm placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:bg-white"
             />
           </div>
 
