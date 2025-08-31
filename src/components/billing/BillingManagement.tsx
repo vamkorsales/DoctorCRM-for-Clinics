@@ -6,6 +6,7 @@ import InvoiceForm from './InvoiceForm';
 import ServiceManagement from './ServiceManagement';
 import PaymentProcessing from './PaymentProcessing';
 import BillingReports from './BillingReports';
+import { supabase } from '../../supabaseClient';
 
 type ViewType = 'invoices' | 'invoice-details' | 'invoice-form' | 'services' | 'payments' | 'reports';
 
@@ -29,11 +30,36 @@ const BillingManagement: React.FC = () => {
     setCurrentView('invoice-form');
   };
 
-  const handleSaveInvoice = (invoiceData: Partial<Invoice>) => {
-    // In a real app, this would save to the backend
-    console.log('Saving invoice:', invoiceData);
-    setCurrentView('invoices');
-    setEditingInvoice(null);
+  const handleSaveInvoice = async (invoiceData: Partial<Invoice>) => {
+    try {
+      if (editingInvoice) {
+        // Update existing invoice
+        const { error } = await supabase
+          .from('invoices')
+          .update(invoiceData)
+          .eq('id', editingInvoice.id);
+
+        if (error) {
+          throw error;
+        }
+        console.log('Invoice updated successfully');
+      } else {
+        // Create new invoice
+        const { error } = await supabase
+          .from('invoices')
+          .insert([invoiceData]);
+
+        if (error) {
+          throw error;
+        }
+        console.log('Invoice created successfully');
+      }
+
+      setCurrentView('invoices');
+      setEditingInvoice(null);
+    } catch (error) {
+      console.error('Error saving invoice:', error);
+    }
   };
 
   const handleBack = () => {

@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { X, Plus, Trash2, Calculator } from 'lucide-react';
 import { Invoice, InvoiceItem, Service } from '../../types/billing';
-import { mockServices } from '../../data/billingMockData';
-import { mockPatients } from '../../data/patientMockData';
-import { mockDoctors } from '../../data/doctorMockData';
+import { Patient } from '../../types/patient';
+import { Doctor } from '../../types/doctor';
+import { supabase } from '../../supabaseClient';
 import { formatCurrency } from '../../utils/formatUtils';
 
 interface InvoiceFormProps {
@@ -24,6 +24,10 @@ const InvoiceForm: React.FC<InvoiceFormProps> = ({ invoice, onSave, onCancel }) 
     items: invoice?.items || [] as InvoiceItem[]
   });
 
+  const [services, setServices] = useState<Service[]>([]);
+  const [patients, setPatients] = useState<Patient[]>([]);
+  const [doctors, setDoctors] = useState<Doctor[]>([]);
+
   const [newItem, setNewItem] = useState({
     serviceId: '',
     quantity: 1,
@@ -34,6 +38,23 @@ const InvoiceForm: React.FC<InvoiceFormProps> = ({ invoice, onSave, onCancel }) 
   const [subtotal, setSubtotal] = useState(0);
   const [taxAmount, setTaxAmount] = useState(0);
   const [totalAmount, setTotalAmount] = useState(0);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      const { data: servicesData, error: servicesError } = await supabase.from('services').select('*');
+      if (servicesError) console.error('Error fetching services:', servicesError);
+      else setServices(servicesData || []);
+
+      const { data: patientsData, error: patientsError } = await supabase.from('patients').select('*');
+      if (patientsError) console.error('Error fetching patients:', patientsError);
+      else setPatients(patientsData || []);
+
+      const { data: doctorsData, error: doctorsError } = await supabase.from('doctors').select('*');
+      if (doctorsError) console.error('Error fetching doctors:', doctorsError);
+      else setDoctors(doctorsData || []);
+    };
+    fetchData();
+  }, []);
 
   useEffect(() => {
     // Calculate due date based on payment terms
@@ -69,7 +90,7 @@ const InvoiceForm: React.FC<InvoiceFormProps> = ({ invoice, onSave, onCancel }) 
   const handleAddItem = () => {
     if (!newItem.serviceId) return;
 
-    const service = mockServices.find(s => s.id === newItem.serviceId);
+    const service = services.find(s => s.id === newItem.serviceId);
     if (!service) return;
 
     const item: InvoiceItem = {
@@ -122,7 +143,7 @@ const InvoiceForm: React.FC<InvoiceFormProps> = ({ invoice, onSave, onCancel }) 
   };
 
   const handleServiceSelect = (serviceId: string) => {
-    const service = mockServices.find(s => s.id === serviceId);
+    const service = services.find(s => s.id === serviceId);
     if (service) {
       setNewItem(prev => ({
         ...prev,
@@ -138,7 +159,7 @@ const InvoiceForm: React.FC<InvoiceFormProps> = ({ invoice, onSave, onCancel }) 
 
     const invoiceData = {
       ...formData,
-      id: invoice?.id || `INV-${Date.now()}`,
+      id: invoice?.id || undefined,
       invoiceNumber: invoice?.invoiceNumber || `INV-${new Date().getFullYear()}-${String(Date.now()).slice(-3)}`,
       status: invoice?.status || 'draft',
       subtotal,
@@ -199,7 +220,7 @@ const InvoiceForm: React.FC<InvoiceFormProps> = ({ invoice, onSave, onCancel }) 
                         className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                       >
                         <option value="">Select a patient</option>
-                        {mockPatients.map((patient) => (
+                        {patients.map((patient) => (
                           <option key={patient.id} value={patient.id}>
                             {patient.firstName} {patient.lastName}
                           </option>
@@ -216,7 +237,7 @@ const InvoiceForm: React.FC<InvoiceFormProps> = ({ invoice, onSave, onCancel }) 
                         className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                       >
                         <option value="">Select a doctor</option>
-                        {mockDoctors.map((doctor) => (
+                        {doctors.map((doctor) => (
                           <option key={doctor.id} value={doctor.id}>
                             {doctor.title} {doctor.firstName} {doctor.lastName}
                           </option>
@@ -290,7 +311,7 @@ const InvoiceForm: React.FC<InvoiceFormProps> = ({ invoice, onSave, onCancel }) 
                             className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                           >
                             <option value="">Select a service</option>
-                            {mockServices.filter(s => s.isActive).map((service) => (
+                            {services.filter(s => s.isActive).map((service) => (
                               <option key={service.id} value={service.id}>
                                 {service.name} - {formatCurrency(service.basePrice)}
                               </option>
