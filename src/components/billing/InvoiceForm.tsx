@@ -32,6 +32,7 @@ const InvoiceForm: React.FC<InvoiceFormProps> = ({ invoice, onSave, onCancel }) 
 
   const [newItem, setNewItem] = useState({
     serviceId: '',
+    serviceName: '',
     quantity: 1,
     unitPrice: 0,
     description: ''
@@ -102,21 +103,20 @@ const InvoiceForm: React.FC<InvoiceFormProps> = ({ invoice, onSave, onCancel }) 
   }, [formData.items]);
 
   const handleAddItem = () => {
-    if (!newItem.serviceId) return;
+    if (!newItem.serviceName) return;
 
     const service = services.find(s => s.id === newItem.serviceId);
-    if (!service) return;
 
     const item: InvoiceItem = {
       id: `ITEM-${Date.now()}`,
-      serviceId: newItem.serviceId,
-      serviceName: service.name,
-      serviceType: service.type,
-      description: newItem.description || service.description,
+      serviceId: newItem.serviceId || `CUSTOM-${Date.now()}`,
+      serviceName: newItem.serviceName,
+      serviceType: service ? service.type : 'custom',
+      description: newItem.description,
       quantity: newItem.quantity,
-      unitPrice: newItem.unitPrice || service.basePrice,
-      totalPrice: newItem.quantity * (newItem.unitPrice || service.basePrice),
-      category: service.category,
+      unitPrice: newItem.unitPrice,
+      totalPrice: newItem.quantity * newItem.unitPrice,
+      category: service ? service.category : 'Custom',
       providedDate: formData.issueDate
     };
 
@@ -127,6 +127,7 @@ const InvoiceForm: React.FC<InvoiceFormProps> = ({ invoice, onSave, onCancel }) 
 
     setNewItem({
       serviceId: '',
+      serviceName: '',
       quantity: 1,
       unitPrice: 0,
       description: ''
@@ -156,17 +157,6 @@ const InvoiceForm: React.FC<InvoiceFormProps> = ({ invoice, onSave, onCancel }) 
     }));
   };
 
-  const handleServiceSelect = (serviceId: string) => {
-    const service = services.find(s => s.id === serviceId);
-    if (service) {
-      setNewItem(prev => ({
-        ...prev,
-        serviceId,
-        unitPrice: service.basePrice,
-        description: service.description
-      }));
-    }
-  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -176,8 +166,10 @@ const InvoiceForm: React.FC<InvoiceFormProps> = ({ invoice, onSave, onCancel }) 
       return;
     }
 
+    const { patientName, doctorName, ...dataToSave } = formData;
+
     const invoiceData = {
-      ...formData,
+      ...dataToSave,
       id: invoice?.id || undefined,
       invoiceNumber: invoice?.invoiceNumber || `INV-${new Date().getFullYear()}-${String(Date.now()).slice(-3)}`,
       status: invoice?.status || 'draft',
@@ -340,18 +332,29 @@ const InvoiceForm: React.FC<InvoiceFormProps> = ({ invoice, onSave, onCancel }) 
                       <div className="grid grid-cols-1 gap-4">
                         <div>
                           <label className="block text-sm font-medium text-gray-700 mb-1">Service</label>
-                          <select
-                            value={newItem.serviceId}
-                            onChange={(e) => handleServiceSelect(e.target.value)}
+                          <input
+                            type="text"
+                            list="services-list"
+                            value={newItem.serviceName}
+                            onChange={(e) => {
+                              const name = e.target.value;
+                              const service = services.find(s => s.name === name);
+                              setNewItem({
+                                ...newItem,
+                                serviceName: name,
+                                serviceId: service ? service.id : '',
+                                unitPrice: service ? service.basePrice : 0,
+                                description: service ? service.description : ''
+                              });
+                            }}
+                            placeholder="Type or select a service"
                             className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                          >
-                            <option value="">Select a service</option>
+                          />
+                          <datalist id="services-list">
                             {services.filter(s => s.isActive).map((service) => (
-                              <option key={service.id} value={service.id}>
-                                {service.name} - {formatCurrency(service.basePrice)}
-                              </option>
+                              <option key={service.id} value={service.name} />
                             ))}
-                          </select>
+                          </datalist>
                         </div>
 
                         <div className="grid grid-cols-3 gap-4">
